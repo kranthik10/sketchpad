@@ -1,0 +1,13 @@
+@import url('https://fonts.googleapis.com/css2?family=Caveat:wght@400;600;700&family=DM+Mono:wght@400;500&display=swap');
+
+:root {
+  --bg: #f5f0e8;
+  --canvas-bg: #fdfaf4;
+  --ink: #1a1a2e;
+  --ink-soft: #4a4a6a;
+  --accent: #e8503a;
+  --selected: #3a7be8;
+  --panel: #fffef9;
+  --panel-border: #d4cfc4;
+  --shadow: rgba(26, 26, 46, 0.12);
+}
