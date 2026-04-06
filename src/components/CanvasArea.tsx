@@ -10,6 +10,7 @@ import {
   useState,
 } from 'react';
 import { createTextMeasure, renderScene, useCanvasRenderer } from '../hooks/useCanvasRenderer';
+import { useCollaborativeCanvas } from '../providers/CollaborativeCanvasProvider';
 import { useCanvasStore } from '../stores/useCanvasStore';
 import { useUiStore } from '../stores/useUiStore';
 import type {
@@ -250,14 +251,18 @@ export const CanvasArea = forwardRef<CanvasAreaHandle>(function CanvasArea(_, re
 
   const elements = useCanvasStore((state) => state.elements);
   const selectedIds = useCanvasStore((state) => state.selectedIds);
-  const setElements = useCanvasStore((state) => state.setElements);
-  const setSelection = useCanvasStore((state) => state.setSelection);
-  const clearSelection = useCanvasStore((state) => state.clearSelection);
   const commitHistory = useCanvasStore((state) => state.commitHistory);
-  const deleteSelection = useCanvasStore((state) => state.deleteSelection);
-  const duplicateSelection = useCanvasStore((state) => state.duplicateSelection);
   const undo = useCanvasStore((state) => state.undo);
   const redo = useCanvasStore((state) => state.redo);
+
+  // Collaborative mutation actions (broadcast to other participants, enforce locks)
+  const {
+    setElements,
+    setSelection,
+    clearSelection,
+    deleteSelection,
+    duplicateSelection,
+  } = useCollaborativeCanvas();
 
   const [canvasMetrics, setCanvasMetrics] = useState<CanvasMetrics>({
     width: 0,
