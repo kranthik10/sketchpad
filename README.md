@@ -28,6 +28,11 @@ Sketchpad is a real-time collaborative drawing application built with React, Vit
     cp .env.example .env
     ```
 
+    By default, the collaboration server runs on port `8787`. You can change this in your `.env` file:
+    - `PORT`: Set this to your desired server port (default: 8787).
+    - `FRONTEND_ORIGIN`: Ensure this matches your Vite dev server address (default: http://localhost:5173).
+    
+
 4.  **Start development server**:
     This will concurrently start the Vite frontend and the Node.js collaboration server.
     ```bash
