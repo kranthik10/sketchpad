@@ -311,10 +311,10 @@ export function App() {
     userId,
   ]);
 
-  // Called when the server closes the connection with code 4001 (host stopped session)
+  // Called when the server closes the connection with code 4001 or 1008
   const handleRemoteSessionEnded = useCallback(() => {
     setCurrentRoomId(null);
-    showToast('Session ended by host');
+    showToast('The collaboration session has ended. You are now in standalone mode.');
   }, [setCurrentRoomId, showToast]);
 
   const collaborationControls = {

@@ -92,8 +92,10 @@ export function YjsRoomProvider({ roomId, onSessionEnded, children }: YjsRoomPro
 
       const prevOnClose = ws.onclose;
       ws.onclose = (event: CloseEvent) => {
-        if (event.code === 4001) {
-          // Host ended the session -- stop reconnecting and notify the app
+        if (event.code === 4001 || event.code === 1008) {
+          // 4001: Host ended session
+          // 1008: Invalid/Expired session (e.g. server restarted)
+          // In both cases, stop reconnecting and notify the app
           wsProvider.shouldConnect = false;
           wsProvider.disconnect();
           onSessionEndedRef.current?.();
