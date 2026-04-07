@@ -13,7 +13,7 @@ Sketchpad is a real-time collaborative drawing application built with React, Vit
 
 1.  **Clone the repository**:
     ```bash
-    git clone <repository-url>
+    git clone https://github.com/kranthik10/sketchpad.git
     cd sketchpad
     ```
 
