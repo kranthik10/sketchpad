@@ -574,6 +574,17 @@ export const CanvasArea = forwardRef<CanvasAreaHandle>(function CanvasArea(_, re
         return;
       }
 
+      // Ignore shortcuts when focus is on an input, textarea, or contenteditable element
+      const target = event.target as HTMLElement;
+      const tagName = target.tagName.toLowerCase();
+      if (
+        tagName === 'input' ||
+        tagName === 'textarea' ||
+        target.isContentEditable
+      ) {
+        return;
+      }
+
       const key = event.key.toLowerCase();
       const ctrl = event.ctrlKey || event.metaKey;
 

@@ -33,7 +33,7 @@ describe('TopBar', () => {
     const onExport = vi.fn();
 
     useCanvasStore.getState().setElements([makeElement()]);
-    render(<TopBar onExport={onExport} />);
+    render(<TopBar collaborationControls={null} onExport={onExport} />);
 
     await user.click(screen.getByTitle('Menu'));
     expect(screen.getByText('Export Image')).toBeInTheDocument();

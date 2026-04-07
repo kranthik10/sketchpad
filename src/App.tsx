@@ -1,13 +1,12 @@
 import type { ComponentProps, ReactNode } from 'react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useCollaborationRoomSync } from './collaboration/useCollaborationRoomSync';
 import { CanvasArea, type CanvasAreaHandle } from './components/CanvasArea';
 import { CollaborationControls } from './components/CollaborationControls';
 import { HelperPopup } from './components/HelperPopup';
 import { PropertiesPanel } from './components/PropertiesPanel';
 import { TopBar } from './components/TopBar';
-import { RoomProvider, serializeBoardSnapshot, useOthers, useSelf, useStatus } from './liveblocks';
 import { CollaborativeCanvasProvider } from './providers/CollaborativeCanvasProvider';
+import { YjsRoomProvider, useYjsRoom } from './providers/YjsRoomProvider';
 import { useCanvasStore } from './stores/useCanvasStore';
 import { useCollaborationStore } from './stores/useCollaborationStore';
 import { useUiStore } from './stores/useUiStore';
@@ -41,21 +40,6 @@ function buildShareUrl(roomId: string): string {
   const url = new URL(window.location.href);
   url.searchParams.set('room', roomId);
   return url.toString();
-}
-
-function formatConnectionStatus(status: string): string {
-  switch (status) {
-    case 'connected':
-      return 'Connected';
-    case 'connecting':
-      return 'Connecting';
-    case 'reconnecting':
-      return 'Reconnecting';
-    case 'disconnected':
-      return 'Disconnected';
-    default:
-      return 'Syncing';
-  }
 }
 
 interface AppShellProps {
@@ -102,44 +86,33 @@ function ConnectedAppShell({
   collaborationControls,
   fallbackParticipant,
 }: ConnectedAppShellProps) {
-  useCollaborationRoomSync();
-
-  const status = useStatus();
-  const self = useSelf();
-  const others = useOthers();
+  const { awarenessUsers, isConnected } = useYjsRoom();
 
   const participants = useMemo<CollaborationParticipant[]>(() => {
     const nextParticipants: CollaborationParticipant[] = [];
 
-    if (self) {
+    awarenessUsers.forEach((user) => {
       nextParticipants.push({
-        id: String(self.id),
-        name: self.info?.name ?? fallbackParticipant.name,
-        color: self.info?.color ?? fallbackParticipant.color,
-        isSelf: true,
+        id: user.userId,
+        name: user.name,
+        color: user.color,
+        isSelf: user.userId === fallbackParticipant.id,
       });
-    } else {
+    });
+
+    if (nextParticipants.length === 0) {
       nextParticipants.push(fallbackParticipant);
     }
 
-    for (const other of others) {
-      nextParticipants.push({
-        id: String(other.id),
-        name: other.info?.name ?? 'Guest',
-        color: other.info?.color ?? '#3a7be8',
-        isSelf: false,
-      });
-    }
-
     return nextParticipants;
-  }, [fallbackParticipant, others, self]);
+  }, [awarenessUsers, fallbackParticipant]);
 
   return (
     <AppShell
       collaborationControls={
         <CollaborationControls
           {...collaborationControls}
-          connectionLabel={formatConnectionStatus(String(status))}
+          connectionLabel={isConnected ? 'Connected' : 'Connecting'}
           participants={participants}
         />
       }
@@ -176,15 +149,6 @@ export function App() {
       isSelf: true,
     }),
     [displayName, userColor, userId],
-  );
-  const initialRoomStorage = useMemo(
-    () => ({
-      snapshot: serializeBoardSnapshot(
-        useCanvasStore.getState().elements,
-        useUiStore.getState().canvasBg,
-      ),
-    }),
-    [currentRoomId],
   );
 
   useEffect(() => {
@@ -359,22 +323,14 @@ export function App() {
 
   if (currentRoomId && hasIdentity) {
     return (
-      <RoomProvider
-        id={currentRoomId}
-        initialPresence={{
-          cursor: null,
-          selectedIds: [],
-          lockedElementIds: [],
-        }}
-        initialStorage={initialRoomStorage}
-      >
+      <YjsRoomProvider roomId={currentRoomId}>
         <CollaborativeCanvasProvider>
           <ConnectedAppShell
             collaborationControls={collaborationControls}
             fallbackParticipant={fallbackParticipant}
           />
         </CollaborativeCanvasProvider>
-      </RoomProvider>
+      </YjsRoomProvider>
     );
   }
 

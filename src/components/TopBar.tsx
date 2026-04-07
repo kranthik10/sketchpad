@@ -1,4 +1,5 @@
 import { Menu, Trash2 } from 'lucide-react';
+import type { ReactNode } from 'react';
 import { useEffect, useRef } from 'react';
 import { useCanvasStore } from '../stores/useCanvasStore';
 import { useUiStore } from '../stores/useUiStore';
@@ -6,6 +7,7 @@ import { Toolbar } from './Toolbar';
 
 interface TopBarProps {
   onExport: () => void;
+  collaborationControls: ReactNode;
 }
 
 const backgroundSwatches = [
@@ -16,7 +18,7 @@ const backgroundSwatches = [
   '#fdf8f6',
 ];
 
-export function TopBar({ onExport }: TopBarProps) {
+export function TopBar({ onExport, collaborationControls }: TopBarProps) {
   const menuOpen = useUiStore((state) => state.menuOpen);
   const canvasBg = useUiStore((state) => state.canvasBg);
   const toggleMenu = useUiStore((state) => state.toggleMenu);
@@ -120,6 +122,7 @@ export function TopBar({ onExport }: TopBarProps) {
       </div>
 
       <div className="topbar-right">
+        {collaborationControls}
         <button className="icon-btn danger" type="button" onClick={clearAll}>
           <Trash2 size={16} />
           Clear
