@@ -223,10 +223,22 @@ app.post(
 
     activeSessions.delete(roomId);
 
-    // Delay cleanup so remaining clients can gracefully disconnect
+    // Close all WebSocket connections in this room with a "session ended" code
+    const room = rooms.get(roomId);
+    if (room) {
+      for (const [conn] of room.conns) {
+        try {
+          conn.close(4001, 'session-ended');
+        } catch {
+          // Connection may already be closing
+        }
+      }
+    }
+
+    // Delay cleanup so close frames can flush
     setTimeout(() => {
       destroyRoom(roomId);
-    }, 5000);
+    }, 3000);
 
     response.status(204).end();
   },

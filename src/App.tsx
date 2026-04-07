@@ -311,6 +311,12 @@ export function App() {
     userId,
   ]);
 
+  // Called when the server closes the connection with code 4001 (host stopped session)
+  const handleRemoteSessionEnded = useCallback(() => {
+    setCurrentRoomId(null);
+    showToast('Session ended by host');
+  }, [setCurrentRoomId, showToast]);
+
   const collaborationControls = {
     roomId: currentRoomId,
     shareUrl,
@@ -323,7 +329,7 @@ export function App() {
 
   if (currentRoomId) {
     return (
-      <YjsRoomProvider roomId={currentRoomId}>
+      <YjsRoomProvider roomId={currentRoomId} onSessionEnded={handleRemoteSessionEnded}>
         <CollaborativeCanvasProvider>
           <ConnectedAppShell
             collaborationControls={collaborationControls}

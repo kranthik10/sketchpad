@@ -40,10 +40,11 @@ export function useOptionalYjsRoom(): YjsRoomContextValue | null {
 
 interface YjsRoomProviderProps {
   roomId: string;
+  onSessionEnded?: () => void;
   children: ReactNode;
 }
 
-export function YjsRoomProvider({ roomId, children }: YjsRoomProviderProps) {
+export function YjsRoomProvider({ roomId, onSessionEnded, children }: YjsRoomProviderProps) {
   const userId = useCollaborationStore((s) => s.userId);
   const displayName = useCollaborationStore((s) => s.displayName);
   const userColor = useCollaborationStore((s) => s.userColor);
@@ -55,6 +56,8 @@ export function YjsRoomProvider({ roomId, children }: YjsRoomProviderProps) {
   );
 
   const doc = useMemo(() => new Y.Doc(), []);
+  const onSessionEndedRef = useRef(onSessionEnded);
+  onSessionEndedRef.current = onSessionEnded;
 
   // Initialize Yjs structures
   const elements = useMemo(() => doc.getMap<CanvasElement>('elements'), [doc]);
@@ -81,6 +84,41 @@ export function YjsRoomProvider({ roomId, children }: YjsRoomProviderProps) {
       setIsConnected(event.status === 'connected');
     });
 
+    // Listen for session-ended close code (4001) from the server
+    // y-websocket exposes the underlying WebSocket via wsProvider.ws
+    const checkSessionEnded = (): void => {
+      const ws = wsProvider.ws;
+      if (!ws) return;
+
+      const prevOnClose = ws.onclose;
+      ws.onclose = (event: CloseEvent) => {
+        if (event.code === 4001) {
+          // Host ended the session -- stop reconnecting and notify the app
+          wsProvider.shouldConnect = false;
+          wsProvider.disconnect();
+          onSessionEndedRef.current?.();
+        }
+        if (typeof prevOnClose === 'function') {
+          prevOnClose.call(ws, event);
+        }
+      };
+    };
+
+    // The WebSocket instance is created asynchronously, so poll until available
+    // then also re-check on each reconnect
+    const pollId = setInterval(() => {
+      if (wsProvider.ws) {
+        checkSessionEnded();
+        clearInterval(pollId);
+      }
+    }, 100);
+
+    wsProvider.on('status', (event: { status: string }) => {
+      if (event.status === 'connected') {
+        checkSessionEnded();
+      }
+    });
+
     // Set up awareness
     const awareness = wsProvider.awareness;
     console.log(`[YjsRoom] Awareness initialized, clientID: ${awareness.clientID}`);
@@ -97,6 +135,7 @@ export function YjsRoomProvider({ roomId, children }: YjsRoomProviderProps) {
     });
 
     return () => {
+      clearInterval(pollId);
       wsProvider.destroy();
       providerRef.current = null;
     };
