@@ -21,6 +21,20 @@ import {
 
 type StyledShapeElement = Exclude<CanvasElement, TextElement>;
 
+export interface RemoteCursor {
+  userId: string;
+  name: string;
+  color: string;
+  x: number;
+  y: number;
+}
+
+export interface RemoteDraft {
+  userId: string;
+  color: string;
+  element: CanvasElement;
+}
+
 export interface RenderSceneOptions {
   ctx: CanvasRenderingContext2D;
   width: number;
@@ -32,6 +46,7 @@ export interface RenderSceneOptions {
   draftElement?: CanvasElement | null;
   selectedIds?: Set<string>;
   showSelection?: boolean;
+  remoteDrafts?: RemoteDraft[];
 }
 
 const patternCache = new WeakMap<CanvasRenderingContext2D, Map<string, CanvasPattern>>();
@@ -807,6 +822,7 @@ export function renderScene({
   draftElement = null,
   selectedIds = new Set<string>(),
   showSelection = true,
+  remoteDrafts = [],
 }: RenderSceneOptions): void {
   const measureTextWidth = createTextMeasure(ctx);
 
@@ -824,6 +840,14 @@ export function renderScene({
 
   if (draftElement) {
     drawElement(ctx, draftElement, measureTextWidth);
+  }
+
+  // Draw remote users' in-progress drafts (semi-transparent)
+  for (const draft of remoteDrafts) {
+    ctx.save();
+    ctx.globalAlpha = 0.45;
+    drawElement(ctx, draft.element, measureTextWidth);
+    ctx.restore();
   }
 
   if (showSelection && selectedIds.size > 0) {
@@ -847,6 +871,7 @@ interface UseCanvasRendererParams {
   elements: CanvasElement[];
   draftElement: CanvasElement | null;
   selectedIds: string[];
+  remoteDrafts?: RemoteDraft[];
 }
 
 export function useCanvasRenderer({
@@ -859,6 +884,7 @@ export function useCanvasRenderer({
   elements,
   draftElement,
   selectedIds,
+  remoteDrafts = [],
 }: UseCanvasRendererParams): void {
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -884,6 +910,7 @@ export function useCanvasRenderer({
       draftElement,
       selectedIds: new Set(selectedIds),
       showSelection: true,
+      remoteDrafts,
     });
   }, [
     canvasRef,
@@ -895,5 +922,6 @@ export function useCanvasRenderer({
     elements,
     draftElement,
     selectedIds,
+    remoteDrafts,
   ]);
 }

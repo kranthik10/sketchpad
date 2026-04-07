@@ -9,9 +9,11 @@ import {
   useRef,
   useState,
 } from 'react';
-import { createTextMeasure, renderScene, useCanvasRenderer } from '../hooks/useCanvasRenderer';
+import { createTextMeasure, renderScene, useCanvasRenderer, type RemoteCursor, type RemoteDraft } from '../hooks/useCanvasRenderer';
 import { useCollaborativeCanvas } from '../providers/CollaborativeCanvasProvider';
+import { useOptionalYjsRoom } from '../providers/YjsRoomProvider';
 import { useCanvasStore } from '../stores/useCanvasStore';
+import { useCollaborationStore } from '../stores/useCollaborationStore';
 import { useUiStore } from '../stores/useUiStore';
 import type {
   ArrowElement,
@@ -270,6 +272,57 @@ export const CanvasArea = forwardRef<CanvasAreaHandle>(function CanvasArea(_, re
     pixelRatio: 1,
   });
   const [draftElement, setDraftElement] = useState<CanvasElement | null>(null);
+
+  // Collaboration awareness: remote cursors and drafts
+  const yjsRoom = useOptionalYjsRoom();
+  const awarenessUsers = yjsRoom?.awarenessUsers;
+  const updateAwareness = yjsRoom?.updateAwareness;
+  const selfUserId = useCollaborationStore((s) => s.userId);
+  const lastAwarenessTime = useRef(0);
+
+  const remoteCursors = useMemo<RemoteCursor[]>(() => {
+    if (!awarenessUsers) return [];
+    const cursors: RemoteCursor[] = [];
+    awarenessUsers.forEach((user) => {
+      if (user.userId !== selfUserId && user.cursor) {
+        cursors.push({
+          userId: user.userId,
+          name: user.name,
+          color: user.color,
+          x: user.cursor.x,
+          y: user.cursor.y,
+        });
+      }
+    });
+    return cursors;
+  }, [awarenessUsers, selfUserId]);
+
+  const remoteDrafts = useMemo<RemoteDraft[]>(() => {
+    if (!awarenessUsers) return [];
+    const drafts: RemoteDraft[] = [];
+    awarenessUsers.forEach((user) => {
+      if (user.userId !== selfUserId && user.currentDraft) {
+        drafts.push({
+          userId: user.userId,
+          color: user.color,
+          element: user.currentDraft,
+        });
+      }
+    });
+    return drafts;
+  }, [awarenessUsers, selfUserId]);
+
+  // Throttled awareness broadcast (~30ms)
+  const broadcastAwareness = useCallback(
+    (update: Parameters<NonNullable<typeof updateAwareness>>[0]) => {
+      if (!updateAwareness) return;
+      const now = performance.now();
+      if (now - lastAwarenessTime.current < 30) return;
+      lastAwarenessTime.current = now;
+      updateAwareness(update);
+    },
+    [updateAwareness],
+  );
   const [selectionBox, setSelectionBox] = useState<{
     left: number;
     top: number;
@@ -668,6 +721,7 @@ export const CanvasArea = forwardRef<CanvasAreaHandle>(function CanvasArea(_, re
     elements,
     draftElement,
     selectedIds,
+    remoteDrafts,
   });
 
   const finishGesture = useCallback((): void => {
@@ -700,6 +754,9 @@ export const CanvasArea = forwardRef<CanvasAreaHandle>(function CanvasArea(_, re
 
     if (gesture.type === 'draw') {
       const finalElement = gesture.draft;
+
+      // Clear draft from awareness when done drawing
+      updateAwareness?.({ currentDraft: null });
 
       if (finalElement.type === 'pencil' && finalElement.points.length < 2) {
         setDraftElement(null);
@@ -899,9 +956,14 @@ export const CanvasArea = forwardRef<CanvasAreaHandle>(function CanvasArea(_, re
     const gesture = gestureRef.current;
 
     if (!gesture) {
+      // No active gesture -- just broadcast cursor position (throttled)
+      broadcastAwareness({ cursor: worldPoint });
       updateHoverCursor(worldPoint);
       return;
     }
+
+    // Active gesture -- broadcast cursor (throttled) for all gesture types
+    broadcastAwareness({ cursor: worldPoint });
 
     if (gesture.type === 'pan') {
       setViewport({
@@ -970,6 +1032,8 @@ export const CanvasArea = forwardRef<CanvasAreaHandle>(function CanvasArea(_, re
 
       gesture.draft = nextDraft;
       setDraftElement(nextDraft);
+      // Broadcast cursor + draft together -- bypass throttle so remote sees live drawing
+      updateAwareness?.({ cursor: worldPoint, currentDraft: nextDraft });
       return;
     }
 
@@ -1026,6 +1090,10 @@ export const CanvasArea = forwardRef<CanvasAreaHandle>(function CanvasArea(_, re
 
   const handlePointerUp = (): void => {
     finishGesture();
+  };
+
+  const handlePointerLeave = (): void => {
+    updateAwareness?.({ cursor: null });
   };
 
   const handleWheel = (event: React.WheelEvent<HTMLCanvasElement>): void => {
@@ -1123,8 +1191,47 @@ export const CanvasArea = forwardRef<CanvasAreaHandle>(function CanvasArea(_, re
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
         onPointerCancel={handlePointerUp}
+        onPointerLeave={handlePointerLeave}
         onWheel={handleWheel}
       />
+
+      {remoteCursors.map((cursor) => {
+        const screenPos = worldToScreen(cursor.x, cursor.y, viewport);
+        return (
+          <div
+            key={cursor.userId}
+            className="remote-cursor"
+            style={{
+              transform: `translate(${screenPos.x}px, ${screenPos.y}px)`,
+            }}
+          >
+            <svg
+              className="remote-cursor-arrow"
+              width="18"
+              height="22"
+              viewBox="0 0 18 22"
+              fill="none"
+            >
+              <path
+                d="M0.292 0.293L0 17.778l5.058-4.903 3.603 8.399 3.07-1.317-3.603-8.399 6.564-0.85L0.292 0.293z"
+                fill={cursor.color}
+              />
+              <path
+                d="M0.292 0.293L0 17.778l5.058-4.903 3.603 8.399 3.07-1.317-3.603-8.399 6.564-0.85L0.292 0.293z"
+                stroke="#fff"
+                strokeWidth="1.2"
+                strokeLinejoin="round"
+              />
+            </svg>
+            <span
+              className="remote-cursor-label"
+              style={{ backgroundColor: cursor.color }}
+            >
+              {cursor.name}
+            </span>
+          </div>
+        );
+      })}
 
       {selectionBox ? (
         <div

@@ -34,6 +34,10 @@ export function useYjsRoom(): YjsRoomContextValue {
   return ctx;
 }
 
+export function useOptionalYjsRoom(): YjsRoomContextValue | null {
+  return useContext(YjsRoomContext);
+}
+
 interface YjsRoomProviderProps {
   roomId: string;
   children: ReactNode;
@@ -111,6 +115,7 @@ export function YjsRoomProvider({ roomId, children }: YjsRoomProviderProps) {
       color: userColor,
       cursor: (current?.cursor) ?? null,
       selectedIds: (current?.selectedIds) ?? [],
+      currentDraft: (current?.currentDraft) ?? null,
     } as YjsAwarenessUpdate);
   }, [userId, displayName, userColor]);
 

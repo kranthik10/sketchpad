@@ -15,6 +15,7 @@ export interface YjsAwarenessUpdate {
   color: string;
   cursor: { x: number; y: number } | null;
   selectedIds: string[];
+  currentDraft: CanvasElement | null;
 }
 
 export interface YjsDocSchema {

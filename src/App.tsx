@@ -185,10 +185,10 @@ export function App() {
 
   useEffect(() => {
     if (currentRoomId && !hasIdentity) {
-      setModalOpen(true);
-      setSessionMessage('Enter your name to join this collaboration session.');
+      // Auto-join with a guest name -- user can change later from the session panel
+      useCollaborationStore.getState().setDisplayName('Guest');
     }
-  }, [currentRoomId, hasIdentity, setModalOpen, setSessionMessage]);
+  }, [currentRoomId, hasIdentity]);
 
   const startSession = useCallback(async (): Promise<void> => {
     if (!hasIdentity) {
@@ -321,7 +321,7 @@ export function App() {
     onStopSession: stopSession,
   };
 
-  if (currentRoomId && hasIdentity) {
+  if (currentRoomId) {
     return (
       <YjsRoomProvider roomId={currentRoomId}>
         <CollaborativeCanvasProvider>
