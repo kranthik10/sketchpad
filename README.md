@@ -1,42 +1,89 @@
-# Sketchpad
+# 🎨 Sketchpad
 
-A premium React + Vite project designed with security and scalability in mind.
+Sketchpad is a real-time collaborative drawing application built with React, Vite, and Yjs.
 
-## Security Features
+## 🚀 Getting Started
 
-- **Strict `.gitignore`**: All environment variables and sensitive files are excluded from version control.
-- **Environment Management**: Use `.env.example` to manage environment-specific configurations without compromising secrets.
-- **Node Modules Protection**: Standard node_modules exclusion and package-lock.json for consistent dependency management.
+### Prerequisites
 
-## Environment Variables
+- [Node.js](https://nodejs.org/) (Project target: v22+)
+- [npm](https://www.npmjs.com/) (Standard for dependency management)
 
-Copy `.env.example` to `.env` to configure your development variables.
+### Local Setup
 
-```bash
-cp .env.example .env
-```
+1.  **Clone the repository**:
+    ```bash
+    git clone <repository-url>
+    cd sketchpad
+    ```
 
-## Getting Started
-
-1.  **Install dependencies**:
+2.  **Install dependencies**:
     ```bash
     npm install
     ```
-2.  **Start development server**:
+
+3.  **Configure environment**:
+    Copy the example environment file and adjust variables as needed:
+    ```bash
+    cp .env.example .env
+    ```
+
+4.  **Start development server**:
+    This will concurrently start the Vite frontend and the Node.js collaboration server.
     ```bash
     npm run dev
     ```
-3.  **Run tests**:
+
+### Running with Docker
+
+We provide a production-ready, multi-stage Docker build for easy deployment.
+
+1.  **Build the image**:
     ```bash
-    npm test
+    docker build -t sketchpad .
     ```
 
-## Development and Deployment
+2.  **Run the container**:
+    ```bash
+    docker run -p 8787:8787 sketchpad
+    ```
 
-- **Build**: Use `npm run build` for a production-ready bundle.
-- **Preview**: Use `npm run preview` to locally test the production bundle.
-- **Continuous Integration**: Ensure environment variables are managed securely within your CI/CD pipelines.
+## 🤝 Collaborative Features
 
-## License
+Sketchpad includes robust real-time collaboration:
+- **Live Cursors**: See where others are working with color-coded labels.
+- **Dynamic Previews**: View immediate "ghost" drafts of elements being drawn.
+- **Session Management**: Start and stop collaboration sessions securely.
+- **Auto-Identity**: Join sessions instantly as a guest, then update your profile.
+
+## 🧪 Testing and Quality
+
+We maintain high code quality with automated tools:
+
+- **Run unit tests**: `npm test`
+- **One-time test run**: `npm run test:run`
+- **Type Checking**: `npx tsc --noEmit`
+
+## 🛠 Contributing
+
+We welcome contributions! Please follow these steps to contribute:
+
+1.  **Create a branch**: `git checkout -b feature/your-feature-name`
+2.  **Implement your changes**: Follow the project's design system and coding standards.
+3.  **Validate locally**: Ensure your code passes all tests and type checks.
+4.  **Commit with clarity**: Use descriptive commit messages following professional standards.
+5.  **Submit a Pull Request**: Follow the PR guidelines below.
+
+## ✅ Pull Request Requirements
+
+Before submitting your PR, ensure the following checklist is completed:
+
+- [ ] **Tests Passing**: Run `npm run test:run` and verify all tests are green.
+- [ ] **Type Integrity**: Run `npx tsc --noEmit` to ensure zero TypeScript errors.
+- [ ] **Formatting**: Code should adhere to the project's formatting standards.
+- [ ] **Documentation**: Update relevant README sections if your PR adds new features or changes existing setup steps.
+- [ ] **No Emojis**: Avoid using emojis in code, comments, or commit messages (per user policy).
+
+## 📄 License
 
 This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details.

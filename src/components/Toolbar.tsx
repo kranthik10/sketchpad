@@ -12,6 +12,7 @@ import {
   Type,
   Undo2,
 } from 'lucide-react';
+import type { ReactNode } from 'react';
 import { useCanvasStore } from '../stores/useCanvasStore';
 import { useUiStore } from '../stores/useUiStore';
 import type { CanvasTool } from '../types/canvas';
@@ -21,18 +22,73 @@ interface ToolConfig {
   title: string;
   keyLabel: string;
   Icon: typeof MousePointer2;
+  hint: ReactNode;
 }
 
 const tools: ToolConfig[] = [
-  { tool: 'select', title: 'Select (S)', keyLabel: 'S', Icon: MousePointer2 },
-  { tool: 'pan', title: 'Pan (H)', keyLabel: 'H', Icon: Hand },
-  { tool: 'pencil', title: 'Pencil (P)', keyLabel: 'P', Icon: Pencil },
-  { tool: 'line', title: 'Line (L)', keyLabel: 'L', Icon: Slash },
-  { tool: 'rect', title: 'Rectangle (R)', keyLabel: 'R', Icon: Square },
-  { tool: 'ellipse', title: 'Ellipse (E)', keyLabel: 'E', Icon: Circle },
-  { tool: 'arrow', title: 'Arrow (A)', keyLabel: 'A', Icon: ArrowRight },
-  { tool: 'text', title: 'Text (T)', keyLabel: 'T', Icon: Type },
-  { tool: 'eraser', title: 'Eraser (X)', keyLabel: 'X', Icon: Eraser },
+  {
+    tool: 'select',
+    title: 'Select (S)',
+    keyLabel: 'S',
+    Icon: MousePointer2,
+    hint: <>To move canvas, hold <kbd>Scroll wheel</kbd> or <kbd>Space</kbd> while dragging, or use the hand tool</>,
+  },
+  {
+    tool: 'pan',
+    title: 'Pan (H)',
+    keyLabel: 'H',
+    Icon: Hand,
+    hint: 'Click and drag to pan around the canvas',
+  },
+  {
+    tool: 'pencil',
+    title: 'Pencil (P)',
+    keyLabel: 'P',
+    Icon: Pencil,
+    hint: 'Click and drag, release when you are finished',
+  },
+  {
+    tool: 'line',
+    title: 'Line (L)',
+    keyLabel: 'L',
+    Icon: Slash,
+    hint: 'Click to start, drag to set endpoint, release to finish',
+  },
+  {
+    tool: 'rect',
+    title: 'Rectangle (R)',
+    keyLabel: 'R',
+    Icon: Square,
+    hint: 'Click and drag to draw a rectangle, release when done',
+  },
+  {
+    tool: 'ellipse',
+    title: 'Ellipse (E)',
+    keyLabel: 'E',
+    Icon: Circle,
+    hint: 'Click and drag to draw an ellipse, release when done',
+  },
+  {
+    tool: 'arrow',
+    title: 'Arrow (A)',
+    keyLabel: 'A',
+    Icon: ArrowRight,
+    hint: <>Click to start, drag to set endpoint, release to finish. Press <kbd>A</kbd> again to change arrow type</>,
+  },
+  {
+    tool: 'text',
+    title: 'Text (T)',
+    keyLabel: 'T',
+    Icon: Type,
+    hint: 'Tip: you can also add text by double-clicking anywhere with the selection tool',
+  },
+  {
+    tool: 'eraser',
+    title: 'Eraser (X)',
+    keyLabel: 'X',
+    Icon: Eraser,
+    hint: <>Click and drag over elements to delete. Hold <kbd>Option</kbd> to revert elements marked for deletion</>,
+  },
 ];
 
 export function Toolbar() {
@@ -51,6 +107,9 @@ export function Toolbar() {
       clearSelection();
     }
   };
+
+  const activeToolConfig = tools.find((t) => t.tool === activeTool);
+  const activeHint = activeToolConfig?.hint ?? '';
 
   return (
     <div id="toolbar">
@@ -127,6 +186,12 @@ export function Toolbar() {
           <Icon size={18} />
         </button>
       ))}
+
+      {activeHint && (
+        <div className="toolbar-hint">
+          {activeHint}
+        </div>
+      )}
     </div>
   );
 }
