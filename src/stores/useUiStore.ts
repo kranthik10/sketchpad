@@ -38,6 +38,7 @@ interface UiActions {
   setMenuOpen: (menuOpen: boolean) => void;
   toggleMenu: () => void;
   setHelperOpen: (helperOpen: boolean) => void;
+  setIsReadOnly: (isReadOnly: boolean) => void;
   showToast: (message: string) => void;
   clearToast: () => void;
   resetUiStore: () => void;
@@ -70,6 +71,7 @@ export const initialUiState: UiState = {
   },
   menuOpen: false,
   helperOpen: false,
+  isReadOnly: false,
   toast: null,
 };
 
@@ -139,6 +141,7 @@ export const useUiStore = create<UiStore>()(
       setMenuOpen: (menuOpen) => set({ menuOpen }),
       toggleMenu: () => set((state) => ({ menuOpen: !state.menuOpen })),
       setHelperOpen: (helperOpen) => set({ helperOpen }),
+      setIsReadOnly: (isReadOnly) => set({ isReadOnly }),
       showToast: (message) => set({ toast: nextToast(message) }),
       clearToast: () => set({ toast: null }),
       resetUiStore: () => set(initialUiState),

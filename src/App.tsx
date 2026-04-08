@@ -17,6 +17,11 @@ function getRoomIdFromUrl(): string | null {
   return url.searchParams.get('room');
 }
 
+function getIsReadOnlyFromUrl(): boolean {
+  const url = new URL(window.location.href);
+  return url.searchParams.get('view') === 'true';
+}
+
 function syncRoomIdToUrl(roomId: string | null): void {
   const url = new URL(window.location.href);
   const currentRoomId = url.searchParams.get('room');
@@ -29,6 +34,7 @@ function syncRoomIdToUrl(roomId: string | null): void {
     url.searchParams.set('room', roomId);
   } else if (currentRoomId) {
     url.searchParams.delete('room');
+    url.searchParams.delete('view');
   } else {
     return;
   }
@@ -39,6 +45,14 @@ function syncRoomIdToUrl(roomId: string | null): void {
 function buildShareUrl(roomId: string): string {
   const url = new URL(window.location.href);
   url.searchParams.set('room', roomId);
+  url.searchParams.delete('view');
+  return url.toString();
+}
+
+function buildReadOnlyUrl(roomId: string): string {
+  const url = new URL(window.location.href);
+  url.searchParams.set('room', roomId);
+  url.searchParams.set('view', 'true');
   return url.toString();
 }
 
@@ -163,8 +177,13 @@ export function App() {
   useEffect(() => {
     const syncFromUrl = (): void => {
       const nextRoomId = getRoomIdFromUrl();
+      const nextIsReadOnly = getIsReadOnlyFromUrl();
       if (useCollaborationStore.getState().currentRoomId !== nextRoomId) {
         setCurrentRoomId(nextRoomId);
+      }
+      useUiStore.getState().setIsReadOnly(nextIsReadOnly);
+      if (nextIsReadOnly) {
+        useUiStore.getState().setActiveTool('pan');
       }
       setRoomUrlReady(true);
     };
@@ -320,6 +339,7 @@ export function App() {
   const collaborationControls = {
     roomId: currentRoomId,
     shareUrl,
+    readOnlyUrl: currentRoomId ? buildReadOnlyUrl(currentRoomId) : null,
     canStop: canStopSession,
     isStarting: isStartingSession,
     isStopping: isStoppingSession,

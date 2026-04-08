@@ -68,6 +68,19 @@ class RoomModel {
     return this.rooms.get(roomId);
   }
 
+  public getStats(): { totalRooms: number; totalUsers: number; rooms: { roomId: string; users: number }[] } {
+    const rooms: { roomId: string; users: number }[] = [];
+    let totalUsers = 0;
+
+    for (const [roomId, room] of this.rooms) {
+      const count = room.conns.size;
+      rooms.push({ roomId, users: count });
+      totalUsers += count;
+    }
+
+    return { totalRooms: this.rooms.size, totalUsers, rooms };
+  }
+
   public destroy(roomId: string): void {
     const room = this.rooms.get(roomId);
     if (!room) return;

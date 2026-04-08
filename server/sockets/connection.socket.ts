@@ -8,7 +8,7 @@ import { sessionModel } from '../models/session.model.js';
 
 const pingTimeout = 30000;
 
-export function setupConnection(socket: WebSocket, roomId: string): void {
+export function setupConnection(socket: WebSocket, roomId: string, isReadOnly = false): void {
   const room = roomModel.getOrCreate(roomId);
   const { doc, awareness, conns } = room;
 
@@ -22,6 +22,10 @@ export function setupConnection(socket: WebSocket, roomId: string): void {
 
       switch (msgType) {
         case messageSync: {
+          // Read-only clients receive sync state but cannot push document changes
+          if (isReadOnly) {
+            break;
+          }
           const encoder = encoding.createEncoder();
           encoding.writeVarUint(encoder, messageSync);
           const syncMessageType = syncProtocol.readSyncMessage(decoder, encoder, doc, socket);

@@ -6,6 +6,7 @@ import { existsSync } from 'node:fs';
 import { WebSocketServer, WebSocket } from 'ws';
 import { config } from './config/index.js';
 import appRouter from './routes/index.js';
+import { roomModel } from './models/room.model.js';
 import { sessionModel } from './models/session.model.js';
 import { setupConnection } from './sockets/connection.socket.js';
 
@@ -37,12 +38,15 @@ if (existsSync(indexHtml)) {
 // -- WebSocket server for Yjs collaboration --
 const wss = new WebSocketServer({ server });
 
-wss.on('connection', (socket: WebSocket, request) => {
+const MAX_USERS_PER_ROOM = 3;
+
+wss.on('connection', (socket: WebSocket, request: http.IncomingMessage) => {
   const url = new URL(request.url!, `http://${request.headers.host}`);
   const pathSegments = url.pathname.split('/').filter(Boolean);
   const roomId = pathSegments[0];
+  const isReadOnly = url.searchParams.get('view') === 'true';
 
-  console.log(`[WS] Connection attempt - room: ${roomId}`);
+  console.log(`[WS] Connection attempt - room: ${roomId} read-only: ${isReadOnly}`);
 
   if (!roomId || !sessionModel.exists(roomId)) {
     console.log(`[WS] Rejecting - active sessions: ${sessionModel.getAllRoomIds().join(', ')}`);
@@ -50,8 +54,16 @@ wss.on('connection', (socket: WebSocket, request) => {
     return;
   }
 
-  setupConnection(socket, roomId);
+  const room = roomModel.get(roomId);
+  if (room && room.conns.size >= MAX_USERS_PER_ROOM) {
+    console.log(`[WS] Rejecting - room ${roomId} is full (${room.conns.size}/${MAX_USERS_PER_ROOM})`);
+    socket.close(1008, 'Room is full (max 3 participants)');
+    return;
+  }
+
+  setupConnection(socket, roomId, isReadOnly);
 });
+
 
 // -- Start Server --
 server.listen(config.port, '0.0.0.0', () => {

@@ -143,6 +143,7 @@ export interface UiState {
   viewport: Viewport;
   menuOpen: boolean;
   helperOpen: boolean;
+  isReadOnly: boolean;
   toast: ToastMessage | null;
 }
 

@@ -1,4 +1,4 @@
-import { Menu, Trash2 } from 'lucide-react';
+import { Eye, Menu, Trash2 } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { useEffect, useRef } from 'react';
 import { useCanvasStore } from '../stores/useCanvasStore';
@@ -21,6 +21,7 @@ const backgroundSwatches = [
 export function TopBar({ onExport, collaborationControls }: TopBarProps) {
   const menuOpen = useUiStore((state) => state.menuOpen);
   const canvasBg = useUiStore((state) => state.canvasBg);
+  const isReadOnly = useUiStore((state) => state.isReadOnly);
   const toggleMenu = useUiStore((state) => state.toggleMenu);
   const setMenuOpen = useUiStore((state) => state.setMenuOpen);
   const setHelperOpen = useUiStore((state) => state.setHelperOpen);
@@ -118,15 +119,24 @@ export function TopBar({ onExport, collaborationControls }: TopBarProps) {
       </div>
 
       <div className="topbar-center">
-        <Toolbar />
+        {isReadOnly ? (
+          <div className="view-only-badge">
+            <Eye size={14} />
+            View Only
+          </div>
+        ) : (
+          <Toolbar />
+        )}
       </div>
 
       <div className="topbar-right">
         {collaborationControls}
-        <button className="icon-btn danger" type="button" onClick={clearAll}>
-          <Trash2 size={16} />
-          Clear
-        </button>
+        {!isReadOnly && (
+          <button className="icon-btn danger" type="button" onClick={clearAll}>
+            <Trash2 size={16} />
+            Clear
+          </button>
+        )}
       </div>
     </header>
   );

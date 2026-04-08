@@ -1,4 +1,4 @@
-import { Copy, Link2, Power, Radio, Users, X } from 'lucide-react';
+import { Copy, Eye, Link2, Power, Radio, Users, X } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { useMemo } from 'react';
 import { useCollaborationStore } from '../stores/useCollaborationStore';
@@ -8,6 +8,7 @@ import type { CollaborationParticipant } from '../types/collaboration';
 interface CollaborationControlsProps {
   roomId: string | null;
   shareUrl: string | null;
+  readOnlyUrl: string | null;
   participants: CollaborationParticipant[];
   canStop: boolean;
   connectionLabel: string;
@@ -20,6 +21,7 @@ interface CollaborationControlsProps {
 export function CollaborationControls({
   roomId,
   shareUrl,
+  readOnlyUrl,
   participants,
   canStop,
   connectionLabel,
@@ -35,10 +37,15 @@ export function CollaborationControls({
   const setModalOpen = useCollaborationStore((state) => state.setModalOpen);
   const setSessionMessage = useCollaborationStore((state) => state.setSessionMessage);
   const showToast = useUiStore((state) => state.showToast);
+  const isReadOnly = useUiStore((state) => state.isReadOnly);
 
   const trimmedName = displayName.trim();
   const participantCount = participants.length;
-  const title = roomId ? `Live (${participantCount || 1})` : 'Live';
+  const title = roomId
+    ? isReadOnly
+      ? 'View Only'
+      : `Live (${participantCount || 1})`
+    : 'Live';
   const primaryActionLabel = roomId ? 'Join session' : 'Start session';
   const canSubmitIdentity = trimmedName.length > 0;
 
@@ -50,13 +57,9 @@ export function CollaborationControls({
     return `${participants.length} participant${participants.length === 1 ? '' : 's'} online`;
   }, [participants]);
 
-  const copyShareLink = async (): Promise<void> => {
-    if (!shareUrl) {
-      return;
-    }
-
+  const copyShareLink = async (url: string): Promise<void> => {
     try {
-      await navigator.clipboard.writeText(shareUrl);
+      await navigator.clipboard.writeText(url);
       showToast('Link copied');
     } catch {
       showToast('Copy the share link from the field.');
@@ -82,12 +85,12 @@ export function CollaborationControls({
   return (
     <>
       <button
-        className={`icon-btn collaboration-btn ${roomId ? 'active' : ''}`}
+        className={`icon-btn collaboration-btn ${roomId ? (isReadOnly ? 'view-only' : 'active') : ''}`}
         type="button"
-        title="Live collaboration"
+        title={isReadOnly ? 'View Only - read access' : 'Live collaboration'}
         onClick={() => setModalOpen(true)}
       >
-        <Radio size={16} />
+        {isReadOnly ? <Eye size={16} /> : <Radio size={16} />}
         {title}
       </button>
 
@@ -143,7 +146,7 @@ export function CollaborationControls({
                 </div>
 
                 <label className="collaboration-field">
-                  <span className="prop-label">Share Link</span>
+                  <span className="prop-label">Edit Link (max 3 users)</span>
                   <div className="collaboration-link-row">
                     <input
                       className="collaboration-input collaboration-link-input"
@@ -154,13 +157,35 @@ export function CollaborationControls({
                     <button
                       className="icon-btn collaboration-inline-btn"
                       type="button"
-                      onClick={copyShareLink}
+                      onClick={() => shareUrl && copyShareLink(shareUrl)}
                     >
                       <Copy size={14} />
                       Copy
                     </button>
                   </div>
                 </label>
+
+                {readOnlyUrl ? (
+                  <label className="collaboration-field">
+                    <span className="prop-label">View-Only Link</span>
+                    <div className="collaboration-link-row">
+                      <input
+                        className="collaboration-input collaboration-link-input"
+                        type="text"
+                        readOnly
+                        value={readOnlyUrl}
+                      />
+                      <button
+                        className="icon-btn collaboration-inline-btn"
+                        type="button"
+                        onClick={() => copyShareLink(readOnlyUrl)}
+                      >
+                        <Copy size={14} />
+                        Copy
+                      </button>
+                    </div>
+                  </label>
+                ) : null}
 
                 {shareUrl ? (
                   <div className="collaboration-qr-block">
