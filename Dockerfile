@@ -45,4 +45,4 @@ USER node
 EXPOSE 8787
 
 # Start the server
-CMD ["tsx", "server/index.ts"]
+CMD ["npm", "run", "server"]

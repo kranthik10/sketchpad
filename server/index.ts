@@ -54,7 +54,7 @@ wss.on('connection', (socket: WebSocket, request) => {
 });
 
 // -- Start Server --
-server.listen(config.port, () => {
-  console.log(`Sketchpad server listening on http://localhost:${config.port}`);
-  console.log(`WebSocket collaboration on ws://localhost:${config.port}`);
+server.listen(config.port, '0.0.0.0', () => {
+  console.log(`Sketchpad server listening on port ${config.port}`);
+  console.log(`WebSocket collaboration on ws://0.0.0.0:${config.port}`);
 });
