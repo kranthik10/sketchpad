@@ -28,8 +28,11 @@ export function useYjsSync(): void {
   // Sync Yjs elements → Zustand (on initial load and remote changes)
   useEffect(() => {
     const observer = (_events: Y.YEvent<any>[], transaction: Y.Transaction) => {
-      // Skip if this is our own change
-      if (transaction.local) return;
+      // Skip if this update originated from the local Zustand->Yjs push (to avoid loops).
+      // Do NOT skip based on transaction.local -- y-websocket applies remote updates
+      // inside transactions that Yjs also marks as local, which would silently drop
+      // every drawing made by non-host peers.
+      if (transaction.origin === 'zustand-push') return;
 
       isRemoteUpdate.current = true;
 
@@ -100,21 +103,23 @@ export function useYjsSync(): void {
       });
 
     if (hasChanges) {
-      // Update Yjs
-      const existingKeys = new Set(yElements.keys());
-      const currentIds = new Set(elements.map((el) => el.id));
+      // Tag this transaction so the Yjs→Zustand observer skips it (prevents loops)
+      doc.transact(() => {
+        const existingKeys = new Set(yElements.keys());
+        const currentIds = new Set(elements.map((el) => el.id));
 
-      // Remove deleted
-      for (const key of existingKeys) {
-        if (!currentIds.has(key)) {
-          yElements.delete(key);
+        // Remove deleted
+        for (const key of existingKeys) {
+          if (!currentIds.has(key)) {
+            yElements.delete(key);
+          }
         }
-      }
 
-      // Add/update
-      for (const element of elements) {
-        yElements.set(element.id, element);
-      }
+        // Add/update
+        for (const element of elements) {
+          yElements.set(element.id, element);
+        }
+      }, 'zustand-push');
 
       lastSyncedElementsRef.current = new Map(
         elements.map((el) => [el.id, el]),
