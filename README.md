@@ -39,18 +39,25 @@ Sketchpad is a real-time collaborative drawing application built with React, Vit
     npm run dev
     ```
 
-### Running with Docker
+### Deployment (Docker / Cloud Providers like Render or Railway)
 
-We provide a production-ready, multi-stage Docker build for easy deployment.
+We provide a production-ready, multi-stage Docker build. The server is designed to handle both the API and WebSocket connections from a single container, while serving the static Vite frontend.
+
+When deploying to platforms like **Render**, **Railway**, or **Fly.io**, ensure you configure the following environment variables if necessary:
+
+- `PORT` (Optional): Cloud providers automatically inject the `$PORT` environment variable. The app will bind to `0.0.0.0:$PORT` automatically. If running Docker locally, it defaults to `8787`.
+- `FRONTEND_ORIGIN` (Optional): If your frontend is served from the same server (which is the default production behavior), leave this blank. The app will automatically bypass CORS restrictions for itself. If you are hosting the frontend separately, set this to your allowed origin (e.g., `https://sketchpad-app.onrender.com`).
+
+#### Deploy via Docker Local
 
 1.  **Build the image**:
     ```bash
-    docker build -t sketchpad .
+    docker build -t sketchpad:latest .
     ```
 
 2.  **Run the container**:
     ```bash
-    docker run -p 8787:8787 sketchpad
+    docker run -d -p 8787:8787 --name sketchpad-app sketchpad:latest
     ```
 
 ## 🤝 Collaborative Features
