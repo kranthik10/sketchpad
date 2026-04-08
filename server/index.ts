@@ -15,7 +15,7 @@ const server = http.createServer(app);
 // -- Middleware --
 app.use(
   cors({
-    origin: config.frontendOrigin,
+    origin: process.env.FRONTEND_ORIGIN || true,
   }),
 );
 app.use(express.json());

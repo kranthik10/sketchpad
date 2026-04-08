@@ -68,11 +68,14 @@ export function YjsRoomProvider({ roomId, onSessionEnded, children }: YjsRoomPro
 
   // Set up WebSocket provider
   useEffect(() => {
-    // The WebSocket must connect to the server port (8787), NOT the Vite dev server (5173)
-    // Vite proxies or serves the frontend, but our Express server handles WebSocket on 8787
-    const serverPort = '8787';
+    // In dev mode (Vite on port 5173), the WebSocket server is on localhost:8787.
+    // In production, Express serves both frontend and WebSocket on the same host/port.
+    const isDev = window.location.port === '5173';
     const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const wsUrl = `${wsProtocol}//${window.location.hostname}:${serverPort}`;
+    const wsHost = isDev
+      ? `${window.location.hostname}:8787`
+      : window.location.host;
+    const wsUrl = `${wsProtocol}//${wsHost}`;
 
     const wsProvider = new WebsocketProvider(wsUrl, roomId, doc);
 
