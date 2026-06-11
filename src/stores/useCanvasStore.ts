@@ -383,7 +383,12 @@ function translateElementForDuplicate(
     };
   }
 
-  if (element.type === 'rect' || element.type === 'ellipse') {
+  if (
+    element.type === 'rect' ||
+    element.type === 'ellipse' ||
+    element.type === 'diamond' ||
+    element.type === 'image'
+  ) {
     return {
       ...element,
       x1: element.x1 + dx,

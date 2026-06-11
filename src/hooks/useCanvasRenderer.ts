@@ -257,7 +257,7 @@ function drawRoughPathForLinear(
 
 function fillShape(
   ctx: CanvasRenderingContext2D,
-  element: Extract<CanvasElement, { type: 'rect' | 'ellipse' }>,
+  element: Extract<CanvasElement, { type: 'rect' | 'ellipse' | 'diamond' }>,
   fill: string,
 ): void {
   if (element.fillStyle === 'hachure') {
@@ -440,6 +440,84 @@ function drawRoughEllipse(
     }
   }
   ctx.stroke();
+}
+
+function drawRoughDiamond(
+  ctx: CanvasRenderingContext2D,
+  element: Extract<CanvasElement, { type: 'diamond' }>,
+): void {
+  const rng = getRng(element.id);
+  const x1 = element.x1;
+  const y1 = element.y1;
+  const x2 = element.x2;
+  const y2 = element.y2;
+  const midX = (x1 + x2) / 2;
+  const midY = (y1 + y2) / 2;
+
+  if (element.fill && element.fill !== 'none') {
+    ctx.beginPath();
+    ctx.moveTo(midX, y1);
+    ctx.lineTo(x2, midY);
+    ctx.lineTo(midX, y2);
+    ctx.lineTo(x1, midY);
+    ctx.closePath();
+    fillShape(ctx, element, element.fill);
+  }
+
+  ctx.beginPath();
+  if (element.sloppiness === 'architect') {
+    ctx.moveTo(midX, y1);
+    ctx.lineTo(x2, midY);
+    ctx.lineTo(midX, y2);
+    ctx.lineTo(x1, midY);
+    ctx.closePath();
+  } else {
+    const styledElement = element as any;
+    drawRoughLine(ctx, midX, y1, x2, midY, styledElement, rng);
+    drawRoughLine(ctx, x2, midY, midX, y2, styledElement, rng);
+    drawRoughLine(ctx, midX, y2, x1, midY, styledElement, rng);
+    drawRoughLine(ctx, x1, midY, midX, y1, styledElement, rng);
+  }
+  ctx.stroke();
+}
+
+const imageCache = new Map<string, HTMLImageElement>();
+
+function drawImageElement(
+  ctx: CanvasRenderingContext2D,
+  element: Extract<CanvasElement, { type: 'image' }>,
+): void {
+  const x = Math.min(element.x1, element.x2);
+  const y = Math.min(element.y1, element.y2);
+  const w = Math.abs(element.x2 - element.x1);
+  const h = Math.abs(element.y2 - element.y1);
+
+  let img = imageCache.get(element.url);
+  if (!img) {
+    img = new Image();
+    img.src = element.url;
+    img.onload = () => {
+      // Image load forces redraw on interaction, we can also trigger a redraw if needed
+    };
+    imageCache.set(element.url, img);
+  }
+
+  if (img.complete && img.naturalWidth !== 0) {
+    ctx.drawImage(img, x, y, w, h);
+  } else {
+    ctx.save();
+    ctx.strokeStyle = '#cccccc';
+    ctx.setLineDash([4, 4]);
+    ctx.strokeRect(x, y, w, h);
+    ctx.fillStyle = '#f9f9f9';
+    ctx.fillRect(x, y, w, h);
+    ctx.font = '12px sans-serif';
+    ctx.fillStyle = '#888888';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('Loading image...', x + w / 2, y + h / 2);
+    ctx.restore();
+  }
 }
 
 function drawArrowhead(
@@ -803,6 +881,18 @@ function drawElement(
 
   if (element.type === 'ellipse') {
     drawRoughEllipse(ctx, element);
+    ctx.restore();
+    return;
+  }
+
+  if (element.type === 'diamond') {
+    drawRoughDiamond(ctx, element);
+    ctx.restore();
+    return;
+  }
+
+  if (element.type === 'image') {
+    drawImageElement(ctx, element);
     ctx.restore();
     return;
   }

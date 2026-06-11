@@ -141,14 +141,14 @@ export function PropertiesPanel() {
       : defaultFontSize;
 
   const showSize = panelTypes.some((type) =>
-    ['rect', 'ellipse', 'line', 'arrow', 'text', 'pencil'].includes(type),
+    ['rect', 'ellipse', 'diamond', 'image', 'line', 'arrow', 'text', 'pencil'].includes(type),
   );
-  const showFill = panelTypes.some((type) => ['rect', 'ellipse'].includes(type));
+  const showFill = panelTypes.some((type) => ['rect', 'ellipse', 'diamond'].includes(type));
   const showOpacity = panelTypes.some((type) =>
-    ['rect', 'ellipse', 'line', 'arrow', 'text', 'pencil'].includes(type),
+    ['rect', 'ellipse', 'diamond', 'image', 'line', 'arrow', 'text', 'pencil'].includes(type),
   );
   const showAdvanced = panelTypes.some((type) =>
-    ['rect', 'ellipse', 'line', 'arrow'].includes(type),
+    ['rect', 'ellipse', 'diamond', 'line', 'arrow'].includes(type),
   );
   const showArrowType = panelTypes.some((type) => ['line', 'arrow'].includes(type));
   const showArrowheads = panelTypes.some((type) => type === 'arrow');
@@ -187,7 +187,7 @@ export function PropertiesPanel() {
   const applyFillStyle = (value: ShapeFillStyle): void => {
     if (inspectorMode) {
       updateSelectedElements((element) =>
-        element.type === 'rect' || element.type === 'ellipse'
+        element.type === 'rect' || element.type === 'ellipse' || element.type === 'diamond'
           ? { ...element, fillStyle: value }
           : element,
       );
@@ -211,6 +211,7 @@ export function PropertiesPanel() {
       updateSelectedElements((element) =>
         element.type === 'rect' ||
         element.type === 'ellipse' ||
+        element.type === 'diamond' ||
         element.type === 'line' ||
         element.type === 'arrow'
           ? { ...element, strokeStyle: value }
@@ -226,6 +227,7 @@ export function PropertiesPanel() {
       updateSelectedElements((element) =>
         element.type === 'rect' ||
         element.type === 'ellipse' ||
+        element.type === 'diamond' ||
         element.type === 'line' ||
         element.type === 'arrow'
           ? { ...element, sloppiness: value }

@@ -262,7 +262,12 @@ export function getBaseBoundingBox(
     };
   }
 
-  if (element.type === 'rect' || element.type === 'ellipse') {
+  if (
+    element.type === 'rect' ||
+    element.type === 'ellipse' ||
+    element.type === 'diamond' ||
+    element.type === 'image'
+  ) {
     return {
       x: Math.min(element.x1, element.x2),
       y: Math.min(element.y1, element.y2),
@@ -382,7 +387,12 @@ export function translateElement(
     };
   }
 
-  if (element.type === 'rect' || element.type === 'ellipse') {
+  if (
+    element.type === 'rect' ||
+    element.type === 'ellipse' ||
+    element.type === 'diamond' ||
+    element.type === 'image'
+  ) {
     return {
       ...element,
       x1: element.x1 + dx,
@@ -855,7 +865,12 @@ function resizeElementToBounds(
     };
   }
 
-  if (element.type === 'rect' || element.type === 'ellipse') {
+  if (
+    element.type === 'rect' ||
+    element.type === 'ellipse' ||
+    element.type === 'diamond' ||
+    element.type === 'image'
+  ) {
     return {
       ...element,
       x1: mapValueToRange(

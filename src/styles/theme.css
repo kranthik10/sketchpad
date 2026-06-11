@@ -12,3 +12,17 @@
   --panel-border: #d4cfc4;
   --shadow: rgba(26, 26, 46, 0.12);
 }
+
+body.dark,
+.dark {
+  --bg: #121214;
+  --canvas-bg: #1c1c1e;
+  --ink: #ececf1;
+  --ink-soft: #a1a1aa;
+  --accent: #ff6b57;
+  --blue: #538df5;
+  --selected: #538df5;
+  --panel: #1e1e20;
+  --panel-border: #2e2e30;
+  --shadow: rgba(0, 0, 0, 0.5);
+}

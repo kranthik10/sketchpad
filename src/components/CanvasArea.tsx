@@ -1,4 +1,4 @@
-import { HelpCircle, Minus, Plus } from 'lucide-react';
+import { HelpCircle, Minus, Plus, Undo2, Redo2 } from 'lucide-react';
 import {
   forwardRef,
   useCallback,
@@ -24,6 +24,8 @@ import type {
   Point,
   PencilElement,
   RectElement,
+  DiamondElement,
+  ImageElement,
   Viewport,
 } from '../types/canvas';
 import {
@@ -68,7 +70,9 @@ type DrawableElement =
   | LineElement
   | ArrowElement
   | RectElement
-  | EllipseElement;
+  | EllipseElement
+  | DiamondElement
+  | ImageElement;
 
 interface DrawingDefaults {
   color: string;
@@ -206,6 +210,18 @@ function buildElement(
       y1: start.y,
       x2: start.x,
       y2: start.y,
+    };
+  }
+
+  if (tool === 'diamond') {
+    return {
+      ...base,
+      type: 'diamond',
+      x1: start.x,
+      y1: start.y,
+      x2: start.x,
+      y2: start.y,
+      fill: defaults.fill,
     };
   }
 
@@ -937,6 +953,48 @@ export const CanvasArea = forwardRef<CanvasAreaHandle>(function CanvasArea(_, re
       return;
     }
 
+    if (activeTool === 'image') {
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = 'image/*';
+      input.onchange = (e) => {
+        const file = (e.target as HTMLInputElement).files?.[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (readerEvent) => {
+          const dataUrl = readerEvent.target?.result as string;
+          const img = new Image();
+          img.onload = () => {
+            const aspect = img.width / img.height;
+            const w = Math.min(300, img.width);
+            const h = w / aspect;
+            const newElement: CanvasElement = {
+              id: crypto.randomUUID(),
+              type: 'image',
+              x1: worldPoint.x,
+              y1: worldPoint.y,
+              x2: worldPoint.x + w,
+              y2: worldPoint.y + h,
+              url: dataUrl,
+              color: defaults.color,
+              size: defaults.size,
+              opacity: defaults.opacity,
+              rotation: 0,
+            };
+            setElements([...elements, newElement]);
+            setSelection([newElement.id]);
+            if (!toolLock) {
+              setActiveTool('select');
+            }
+          };
+          img.src = dataUrl;
+        };
+        reader.readAsDataURL(file);
+      };
+      input.click();
+      return;
+    }
+
     const nextDraft = buildElement(activeTool, worldPoint, defaults);
 
     if (!nextDraft) {
@@ -1292,7 +1350,7 @@ export const CanvasArea = forwardRef<CanvasAreaHandle>(function CanvasArea(_, re
         />
       ) : null}
 
-      <div id="bottom-right-controls">
+      <div id="bottom-left-controls">
         <div id="zoom-controls">
           <button className="zoom-btn" type="button" onClick={() => changeZoom(-0.1)}>
             <Minus size={14} />
@@ -1305,6 +1363,27 @@ export const CanvasArea = forwardRef<CanvasAreaHandle>(function CanvasArea(_, re
           </button>
         </div>
 
+        <div id="undo-redo-controls">
+          <button
+            className="zoom-btn"
+            type="button"
+            title="Undo (Ctrl+Z)"
+            onClick={undo}
+          >
+            <Undo2 size={14} />
+          </button>
+          <button
+            className="zoom-btn"
+            type="button"
+            title="Redo (Ctrl+Y)"
+            onClick={redo}
+          >
+            <Redo2 size={14} />
+          </button>
+        </div>
+      </div>
+
+      <div id="bottom-right-controls">
         <button
           className="icon-btn icon-only"
           type="button"

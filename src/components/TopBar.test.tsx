@@ -36,13 +36,13 @@ describe('TopBar', () => {
     render(<TopBar collaborationControls={null} onExport={onExport} />);
 
     await user.click(screen.getByTitle('Menu'));
-    expect(screen.getByText('Export Image')).toBeInTheDocument();
+    expect(screen.getByText('Export image...')).toBeInTheDocument();
 
-    await user.click(screen.getByText('Export Image'));
+    await user.click(screen.getByText('Export image...'));
     expect(onExport).toHaveBeenCalledTimes(1);
 
     await user.click(screen.getByTitle('Menu'));
-    await user.click(screen.getByText('Help & Shortcuts'));
+    await user.click(screen.getByText('Help'));
     expect(useUiStore.getState().helperOpen).toBe(true);
 
     await user.click(screen.getByRole('button', { name: /clear/i }));

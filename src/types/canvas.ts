@@ -7,7 +7,10 @@ export type CanvasTool =
   | 'ellipse'
   | 'arrow'
   | 'text'
-  | 'eraser';
+  | 'eraser'
+  | 'diamond'
+  | 'image'
+  | 'more';
 
 export type EdgeStyle = 'sharp' | 'round';
 export type FillStyle = 'none' | string;
@@ -94,6 +97,24 @@ export interface EllipseElement extends BaseCanvasElement {
   fill: FillStyle;
 }
 
+export interface DiamondElement extends BaseCanvasElement {
+  type: 'diamond';
+  x1: number;
+  y1: number;
+  x2: number;
+  y2: number;
+  fill: FillStyle;
+}
+
+export interface ImageElement extends BaseCanvasElement {
+  type: 'image';
+  x1: number;
+  y1: number;
+  x2: number;
+  y2: number;
+  url: string;
+}
+
 export interface TextElement {
   id: string;
   type: 'text';
@@ -115,6 +136,8 @@ export type CanvasElement =
   | ArrowElement
   | RectElement
   | EllipseElement
+  | DiamondElement
+  | ImageElement
   | TextElement;
 
 export interface ToastMessage {
